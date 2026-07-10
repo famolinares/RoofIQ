@@ -1,70 +1,58 @@
 # RoofIQ
 
-RoofIQ is a South Florida roof-prospecting application that combines county property records, owner-occupancy signals, permit-age filters, aerial imagery, and later AI-assisted roof-condition scoring.
+South Florida Roof Prospecting Platform
 
-## Current milestone
+RoofIQ is a Streamlit application for residential roofing prospecting. Phase 1 focuses on a professional project foundation, Excel intake, spreadsheet preview, and temporary SQLite storage.
 
-Version 0.1 provides a working local data-review application that:
+AI roof analysis is intentionally out of scope for Phase 1.
 
-- imports the Miami-Dade enriched CSV/XLSX file;
-- preserves folio numbers as text;
-- identifies likely owner-occupied properties by comparing situs and mailing addresses;
-- filters by market tier, ZIP code, roof age, property value, and occupancy status;
-- displays prospect-level property and owner details;
-- exports a filtered postcard-mailing CSV;
-- keeps homeowner data out of GitHub.
+## Features
 
-## Run locally
+- Streamlit dashboard titled RoofIQ.
+- Excel `.xlsx` upload.
+- Spreadsheet loading with Pandas and OpenPyXL.
+- Imported record count, column list, and first 20 rows.
+- Temporary SQLite persistence for imported datasets.
+- Clean module boundaries for future database, model, service, utility, and page additions.
 
-1. Install Python 3.11 or newer.
-2. Clone this repository.
-3. Create and activate a virtual environment.
-4. Install dependencies:
+## Project Structure
 
-```bash
-pip install -r requirements.txt
+```text
+.
+|-- app.py
+|-- data/
+|-- docs/
+|-- exports/
+|-- requirements.txt
+|-- src/
+|   |-- database/
+|   |-- models/
+|   |-- pages/
+|   |-- services/
+|   `-- utils/
+`-- uploads/
 ```
 
-5. Start the application:
+## Getting Started
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 streamlit run app.py
 ```
 
-6. Upload `Miami_Dade_1665_Enriched.xlsx` or a compatible CSV/XLSX file through the application.
+On Windows PowerShell:
 
-## Data privacy
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-Do **not** commit property-owner files, mailing lists, aerial-image exports, API keys, or credentials to this repository. The repository is currently public. Uploaded files are processed during the local Streamlit session and are not written to the repository.
+## Data Storage
 
-## Required Miami-Dade fields
+Uploaded workbook data is stored in `data/roofiq.sqlite3`. Each upload is written to a generated import table and tracked in the `import_batches` metadata table.
 
-The first release recognizes the following columns from the supplied enriched sample:
-
-- `Folio_Accurate`
-- `Address`
-- `Zip_Code`
-- `Year_Built`
-- `Roof_Age_Years`
-- `Owner_Name_Primary`
-- `Owner_Name_Secondary`
-- `Market_Tier`
-- `CO_Property City`
-- `CO_Total`
-- `CO_Assessed`
-- `CO_Land Use`
-- `CO_Owner1`
-- `CO_Owner2`
-- `CO_Mailing Address`
-- `CO_Mailing City`
-- `CO_Mailing State`
-- `CO_Mailing Zip`
-
-## Roadmap
-
-1. Local import, qualification, review, and mailing export.
-2. Geocoding and interactive parcel map.
-3. Licensed aerial-imagery adapter.
-4. Manual roof-review labels and audit trail.
-5. AI-assisted roof-condition prioritization.
-6. Broward and Palm Beach import adapters.
+The SQLite database is temporary for early development and is ignored by Git.
