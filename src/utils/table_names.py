@@ -4,6 +4,7 @@ import re
 
 
 def build_import_table_name(filename: str) -> str:
+    """Build a safe SQLite table name for a workbook import."""
     stem = Path(filename).stem.lower()
     normalized = re.sub(r"[^a-z0-9]+", "_", stem).strip("_")
     safe_name = normalized or "workbook"

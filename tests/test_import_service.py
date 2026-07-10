@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 import re
 import sqlite3
 
@@ -26,7 +27,7 @@ def build_workbook(
     return NamedBytesIO(buffer.getvalue(), filename)
 
 
-def build_import_service(tmp_path) -> ImportService:
+def build_import_service(tmp_path: Path) -> ImportService:
     database_config = DatabaseConfig(path=tmp_path / "roofiq.sqlite3")
     initialize_database(database_config)
     return ImportService(database_config=database_config)

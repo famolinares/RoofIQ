@@ -10,9 +10,12 @@ from src.utils.paths import DATA_DIR
 APP_TITLE = "RoofIQ"
 APP_SUBTITLE = "South Florida Roof Prospecting Platform"
 DATABASE_PATH = DATA_DIR / "roofiq.sqlite3"
+RECORD_METRIC_COLUMN_WEIGHT = 1
+COLUMN_LIST_COLUMN_WEIGHT = 3
 
 
 def configure_page() -> None:
+    """Configure the Streamlit page shell."""
     st.set_page_config(
         page_title=APP_TITLE,
         page_icon="RoofIQ",
@@ -22,12 +25,14 @@ def configure_page() -> None:
 
 
 def render_header() -> None:
+    """Render the application title and Phase 1 context."""
     st.title(APP_TITLE)
     st.subheader(APP_SUBTITLE)
     st.caption("Phase 1: spreadsheet intake and structured local storage.")
 
 
 def render_upload(import_service: ImportService) -> None:
+    """Render the Excel upload workflow and imported dataset preview."""
     uploaded_file = st.file_uploader(
         "Upload residential roofing prospect spreadsheet",
         type=["xlsx"],
@@ -52,7 +57,9 @@ def render_upload(import_service: ImportService) -> None:
         f"`{imported_dataset.table_name}`."
     )
 
-    metric_col, table_col = st.columns([1, 3])
+    metric_col, table_col = st.columns(
+        [RECORD_METRIC_COLUMN_WEIGHT, COLUMN_LIST_COLUMN_WEIGHT]
+    )
     with metric_col:
         st.metric("Records", f"{imported_dataset.record_count:,}")
     with table_col:
@@ -68,6 +75,7 @@ def render_upload(import_service: ImportService) -> None:
 
 
 def main() -> None:
+    """Start the RoofIQ Streamlit application."""
     configure_page()
     render_header()
 

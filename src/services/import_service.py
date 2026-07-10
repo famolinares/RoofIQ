@@ -13,9 +13,12 @@ from src.utils.table_names import build_import_table_name
 
 @dataclass(frozen=True)
 class ImportService:
+    """Application service for importing Excel workbooks into SQLite."""
+
     database_config: DatabaseConfig
 
     def import_excel(self, uploaded_file: BinaryIO) -> ImportedDataset:
+        """Read, validate, persist, and summarize an uploaded Excel workbook."""
         source_filename = getattr(uploaded_file, "name", "uploaded_workbook.xlsx")
         if not source_filename.lower().endswith(".xlsx"):
             raise ValueError("Please upload a valid .xlsx Excel workbook.")
