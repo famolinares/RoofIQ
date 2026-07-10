@@ -11,6 +11,7 @@ from src.services.occupancy_service import (
     NON_OWNER_OCCUPIED_STATUS,
     OCCUPANCY_STATUS_COLUMN,
     OWNER_OCCUPIED_STATUS,
+    UNKNOWN_OCCUPANCY_STATUS,
     OccupancyService,
 )
 from src.utils.paths import DATA_DIR
@@ -21,9 +22,14 @@ APP_SUBTITLE = "South Florida Roof Prospecting Platform"
 DATABASE_PATH = DATA_DIR / "roofiq.sqlite3"
 RECORD_METRIC_COLUMN_WEIGHT = 1
 COLUMN_LIST_COLUMN_WEIGHT = 3
-OCCUPANCY_METRIC_COLUMN_COUNT = 4
+OCCUPANCY_METRIC_COLUMN_COUNT = 5
 OWNER_OCCUPIED_COLOR = "background-color: #d1fae5; color: #065f46;"
 NON_OWNER_OCCUPIED_COLOR = "background-color: #f3f4f6; color: #374151;"
+UNKNOWN_OCCUPANCY_COLOR = "background-color: #fef3c7; color: #92400e;"
+FILTER_ALL = "All"
+FILTER_OWNER_OCCUPIED = "Likely Owner Occupied"
+FILTER_NON_OWNER_OCCUPIED = "Likely Non Owner Occupied"
+FILTER_UNKNOWN = "Unknown"
 
 
 def configure_page() -> None:
@@ -37,10 +43,10 @@ def configure_page() -> None:
 
 
 def render_header() -> None:
-    """Render the application title and Phase 1 context."""
+    """Render the application title and Phase 2 context."""
     st.title(APP_TITLE)
     st.subheader(APP_SUBTITLE)
-    st.caption("Phase 1: spreadsheet intake and structured local storage.")
+    st.caption("Phase 2: owner occupancy detection.")
 
 
 def render_upload(
@@ -79,14 +85,20 @@ def render_upload(
     non_owner_occupied_count = int(
         (classified_data[OCCUPANCY_STATUS_COLUMN] == NON_OWNER_OCCUPIED_STATUS).sum()
     )
-    occupancy_percentage = owner_occupied_count / imported_dataset.record_count
+    unknown_count = int(
+        (classified_data[OCCUPANCY_STATUS_COLUMN] == UNKNOWN_OCCUPANCY_STATUS).sum()
+    )
+    known_record_count = owner_occupied_count + non_owner_occupied_count
+    occupancy_percentage = (
+        owner_occupied_count / known_record_count if known_record_count else 0
+    )
 
     st.success(
         f"Imported {imported_dataset.record_count:,} records into SQLite table "
         f"`{imported_dataset.table_name}`."
     )
 
-    total_col, owner_col, non_owner_col, percent_col = st.columns(
+    total_col, owner_col, non_owner_col, unknown_col, percent_col = st.columns(
         OCCUPANCY_METRIC_COLUMN_COUNT
     )
     with total_col:
@@ -95,15 +107,21 @@ def render_upload(
         st.metric("Likely Owner Occupied", f"{owner_occupied_count:,}")
     with non_owner_col:
         st.metric("Likely Non Owner Occupied", f"{non_owner_occupied_count:,}")
+    with unknown_col:
+        st.metric("Unknown", f"{unknown_count:,}")
     with percent_col:
         st.metric("Occupancy %", f"{occupancy_percentage:.1%}")
 
-    show_only_owner_occupied = st.checkbox("Show only likely owner occupied")
-    display_data = classified_data
-    if show_only_owner_occupied:
-        display_data = classified_data[
-            classified_data[OCCUPANCY_STATUS_COLUMN] == OWNER_OCCUPIED_STATUS
-        ]
+    selected_filter = st.selectbox(
+        "Occupancy filter",
+        [
+            FILTER_ALL,
+            FILTER_OWNER_OCCUPIED,
+            FILTER_NON_OWNER_OCCUPIED,
+            FILTER_UNKNOWN,
+        ],
+    )
+    display_data = filter_occupancy_data(classified_data, selected_filter)
 
     record_col, table_col = st.columns(
         [RECORD_METRIC_COLUMN_WEIGHT, COLUMN_LIST_COLUMN_WEIGHT]
@@ -133,9 +151,29 @@ def style_occupancy_status(data_frame: pd.DataFrame) -> Styler:
             return OWNER_OCCUPIED_COLOR
         if value == NON_OWNER_OCCUPIED_STATUS:
             return NON_OWNER_OCCUPIED_COLOR
+        if value == UNKNOWN_OCCUPANCY_STATUS:
+            return UNKNOWN_OCCUPANCY_COLOR
         return ""
 
     return data_frame.style.map(style_cell, subset=[OCCUPANCY_STATUS_COLUMN])
+
+
+def filter_occupancy_data(
+    data_frame: pd.DataFrame,
+    selected_filter: str,
+) -> pd.DataFrame:
+    """Filter classified records by the selected occupancy status."""
+    if selected_filter == FILTER_OWNER_OCCUPIED:
+        return data_frame[data_frame[OCCUPANCY_STATUS_COLUMN] == OWNER_OCCUPIED_STATUS]
+    if selected_filter == FILTER_NON_OWNER_OCCUPIED:
+        return data_frame[
+            data_frame[OCCUPANCY_STATUS_COLUMN] == NON_OWNER_OCCUPIED_STATUS
+        ]
+    if selected_filter == FILTER_UNKNOWN:
+        return data_frame[
+            data_frame[OCCUPANCY_STATUS_COLUMN] == UNKNOWN_OCCUPANCY_STATUS
+        ]
+    return data_frame
 
 
 def main() -> None:
