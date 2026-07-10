@@ -25,7 +25,7 @@ def initialize_database(config: DatabaseConfig) -> None:
                 source_filename TEXT NOT NULL,
                 table_name TEXT NOT NULL,
                 record_count INTEGER NOT NULL,
-                imported_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                imported_at TEXT NOT NULL
             );
             """
         )

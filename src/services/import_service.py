@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import BinaryIO
 
 import pandas as pd
@@ -19,7 +20,18 @@ class ImportService:
         if not source_filename.lower().endswith(".xlsx"):
             raise ValueError("Please upload a valid .xlsx Excel workbook.")
 
-        data_frame = pd.read_excel(uploaded_file, engine="openpyxl")
+        try:
+            data_frame = pd.read_excel(
+                uploaded_file,
+                engine="openpyxl",
+                dtype=str,
+                keep_default_na=False,
+            )
+        except Exception as exc:
+            raise ValueError(
+                "The uploaded workbook could not be read as a valid .xlsx file."
+            ) from exc
+
         if data_frame.empty:
             raise ValueError("The uploaded workbook does not contain any records.")
 
@@ -45,9 +57,15 @@ class ImportService:
                 INSERT INTO import_batches (
                     source_filename,
                     table_name,
-                    record_count
+                    record_count,
+                    imported_at
                 )
-                VALUES (?, ?, ?);
+                VALUES (?, ?, ?, ?);
                 """,
-                (source_filename, table_name, len(data_frame)),
+                (
+                    source_filename,
+                    table_name,
+                    len(data_frame),
+                    datetime.now(UTC).isoformat(),
+                ),
             )
